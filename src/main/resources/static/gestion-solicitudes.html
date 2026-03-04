@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Solicitudes</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<!-- NAVBAR (ADMIN) -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="index.html">Soporte Empresarial</a>
+
+    <div>
+      <ul class="navbar-nav">
+
+        <li class="nav-item">
+          <a class="nav-link active" href="gestion-solicitudes.html">Gestionar Solicitudes</a>
+        </li>
+
+        <li class="nav-item ms-3">
+          <form method="post" action="/auth/logout">
+            <button class="btn btn-outline-light btn-sm">Cerrar sesión</button>
+          </form>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-5">
+
+  <h2 class="mb-4 text-center">Panel de Gestión de Solicitudes</h2>
+
+  <div id="mensaje"></div>
+
+  <div class="card shadow">
+    <div class="card-body">
+
+      <table class="table table-hover align-middle">
+
+        <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Cliente</th>
+          <th>Descripción</th>
+          <th>Estado</th>
+          <th style="width: 180px;">Cambiar Estado</th>
+          <th style="width: 110px;">Eliminar</th>
+        </tr>
+        </thead>
+
+        <tbody id="tablaSolicitudes"></tbody>
+
+      </table>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const tabla = document.getElementById("tablaSolicitudes");
+  const mensajeDiv = document.getElementById("mensaje");
+
+  function mostrarMensaje(tipo, texto) {
+    mensajeDiv.innerHTML = `
+      <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+        ${texto}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+  }
+
+  // Verificar rol antes de cargar
+  fetch("/auth/me")
+    .then(r => r.json())
+    .then(u => {
+
+      if (u.rol !== "ADMIN") {
+        document.body.innerHTML = `
+          <div class="container mt-5 text-center">
+            <h3>No tienes permiso para acceder a esta página</h3>
+            <a href="index.html" class="btn btn-primary mt-3">Volver</a>
+          </div>
+        `;
+        return;
+      }
+
+      cargarSolicitudes();
+    });
+
+  function cargarSolicitudes() {
+    fetch("/solicitudes")
+      .then(r => r.json())
+      .then(data => {
+
+        tabla.innerHTML = "";
+
+        data.forEach(solicitud => {
+          const fila = document.createElement("tr");
+
+          fila.innerHTML = `
+            <td>${solicitud.id}</td>
+            <td>${solicitud.cliente?.nombre ?? "N/A"}</td>
+            <td>${solicitud.descripcion}</td>
+            <td>
+              <span class="badge ${colorEstado(solicitud.estado)}">
+                ${solicitud.estado}
+              </span>
+            </td>
+            <td>
+              <select class="form-select form-select-sm"
+                      onchange="cambiarEstado(${solicitud.id}, this.value)">
+                <option value="PENDIENTE" ${solicitud.estado === "PENDIENTE" ? "selected" : ""}>PENDIENTE</option>
+                <option value="EN_PROCESO" ${solicitud.estado === "EN_PROCESO" ? "selected" : ""}>EN_PROCESO</option>
+                <option value="FINALIZADO" ${solicitud.estado === "FINALIZADO" ? "selected" : ""}>FINALIZADO</option>
+              </select>
+            </td>
+            <td>
+              <button class="btn btn-danger btn-sm" onclick="eliminarSolicitud(${solicitud.id})">
+                Eliminar
+              </button>
+            </td>
+          `;
+
+          tabla.appendChild(fila);
+        });
+      })
+      .catch(() => mostrarMensaje("danger", "Error cargando solicitudes"));
+  }
+
+  function cambiarEstado(id, nuevoEstado) {
+    if (!nuevoEstado) return;
+
+    fetch(`/solicitudes/${id}/estado?estado=${nuevoEstado}`, { method: "PUT" })
+      .then(r => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
+      .then(() => {
+        mostrarMensaje("success", "Estado actualizado correctamente ✔");
+        cargarSolicitudes();
+      })
+      .catch(() => mostrarMensaje("danger", "Error al actualizar estado"));
+  }
+
+  function eliminarSolicitud(id) {
+    const ok = confirm("¿Seguro que deseas eliminar esta solicitud?");
+    if (!ok) return;
+
+    fetch(`/solicitudes/${id}`, { method: "DELETE" })
+      .then(r => {
+        if (!r.ok) throw new Error();
+        mostrarMensaje("success", "Solicitud eliminada correctamente ✔");
+        cargarSolicitudes();
+      })
+      .catch(() => mostrarMensaje("danger", "Error al eliminar la solicitud"));
+  }
+
+  function colorEstado(estado) {
+    if (estado === "PENDIENTE") return "bg-warning text-dark";
+    if (estado === "EN_PROCESO") return "bg-info text-dark";
+    if (estado === "FINALIZADO") return "bg-success";
+    return "bg-secondary";
+  }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

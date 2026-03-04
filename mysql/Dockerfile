@@ -1,0 +1,8 @@
+FROM mysql:8.4
+
+ENV MYSQL_DATABASE=taller_soporte
+ENV MYSQL_USER=appuser
+ENV MYSQL_PASSWORD=apppass
+ENV MYSQL_ROOT_PASSWORD=rootpass
+
+EXPOSE 3306

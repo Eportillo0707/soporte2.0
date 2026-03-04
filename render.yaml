@@ -1,0 +1,20 @@
+services:
+  - type: pserv
+    name: soporte-mysql
+    env: docker
+    dockerfilePath: ./mysql/Dockerfile
+    plan: free
+
+  - type: web
+    name: soporte-api
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:mysql://soporte-mysql:3306/taller_soporte?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - key: SPRING_DATASOURCE_USERNAME
+        value: appuser
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: apppass

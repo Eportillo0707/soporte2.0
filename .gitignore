@@ -35,7 +35,7 @@ Thumbs.db
 ####################################
 # Application config (credenciales)
 ####################################
-src/main/resources/application.properties
+
 
 ####################################
 # Node / Frontend (por si agregas luego)

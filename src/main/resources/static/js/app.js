@@ -191,7 +191,7 @@ function cargarTodasLasSolicitudes() {
 function actualizarEstado(id) {
     const nuevoEstado = document.getElementById(`estadoSelect-${id}`).value;
 
-    fetch(`/solicitudes/${id}/estado?estado=${nuevoEstado}`, { method: 'POST' })
+    fetch(`/solicitudes/${id}/estado?estado=${nuevoEstado}`, { method: 'PUT' })
         .then(r => {
             if (r.ok) {
                 alert(`Ticket #${id} actualizado a ${nuevoEstado}`);
